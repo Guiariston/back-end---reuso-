@@ -1,14 +1,25 @@
 services:
-  api:                              #Nome do meu servico
-    build: .                        #"faca build e isso vai ta na raiz do meu projeto"
-    container_name: backend         #nome do container - customizado
-    ports:                          #porta do docker run, nao vai precisar mais rodar na mao
-      - "3000:3000"
-    #command:  npm start
+  api:     
     depends_on:
-      - db
-
+      db:
+        condition: service_healthy      #Nome do meu servico
+    build: .                            #"faca build e isso vai ta na raiz do meu projeto"
+    container_name: backend             #nome do container - customizado
+    ports:                              #porta do docker run, nao vai precisar mais rodar na mao
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
   db:
     image:  postgres:15-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
